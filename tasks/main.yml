@@ -1,0 +1,124 @@
+---
+# tasks file for ansible-icinga2-client
+
+# Include variables at the start so they're in scope
+- name: Include OS-specific variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+
+# Include RedHat specific variables due to x64/x86 differences
+- name: Include RedHat x86 variables
+  include_vars: "{{ ansible_os_family }}.yml"
+  when: "'{{ansible_os_family}}' == 'RedHat' and '{{ansible_architecture}}' == 'i386'"
+
+- name: Include RedHat x64 variables
+  include_vars: "{{ ansible_os_family }}-x64.yml"
+  when: "'{{ansible_os_family}}' == 'RedHat' and '{{ansible_architecture}}' == 'x86_64'"
+
+- include: RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+#- file: path="{{ nagios_nrpe_server_nrpe_d_dir }}" state=directory owner=root group={{ nagios_nrpe_server_group }} mode=0750
+
+# Create basic_linux.cfg
+#- name: Create basic_linux.cfg from template
+#  template: >
+#    src="basic_linux.cfg.j2"
+#    dest="{{ nagios_nrpe_server_nrpe_d_dir }}/basic_linux.cfg"
+#    owner=root group={{ nagios_nrpe_server_group }} mode=0640
+#  #notify: restart nagios-nrpe-server
+
+- name: install icinga2-bin
+  package: name=icinga2-bin state=present
+
+- name: create /etc/icinga2/pki directory
+  file: path=/etc/icinga2/pki state=directory owner=icinga group=icinga
+
+- name: Generate a new local self-signed certificate.
+  shell: >
+    icinga2 pki new-cert --cn {{ ansible_fqdn }}
+    --key /etc/icinga2/pki/{{ ansible_fqdn }}.key
+    --cert /etc/icinga2/pki/{{ ansible_fqdn }}.crt
+    creates=/etc/icinga2/pki/{{ ansible_fqdn }}.key
+
+- name: Request the master certificate from the master host (icinga2-node1.localdomain) and store it as trusted-master.crt. Review it and continue.
+  shell: >
+    icinga2 pki save-cert --key /etc/icinga2/pki/{{ ansible_fqdn }}.key
+    --cert /etc/icinga2/pki/{{ ansible_fqdn }}.crt
+    --trustedcert /etc/icinga2/pki/trusted-master.crt
+    --host {{ icinga2_server }}
+    creates=/etc/icinga2/pki/trusted-master.crt
+
+- name: generate ticket
+  shell: >
+    icinga2 pki ticket --cn {{ ansible_fqdn }} --salt {{ ticket_salt }}
+    creates=/etc/icinga2/pki/ca.crt
+  register: client_ticket
+  changed_when: false
+
+# - name: Send the self-signed certificate to the master host using the ticket number and receive a CA signed certificate and the master's ca.crt certificate. Specify the path to the previously stored trusted master certificate.
+#   shell: >
+#     icinga2 pki request --host {{ icinga2_server }} --port {{ icinga2_server_port }}
+#     --ticket {{ client_ticket.stdout }}
+#     --key /etc/icinga2/pki/{{ ansible_fqdn }}.key
+#     --cert /etc/icinga2/pki/{{ ansible_fqdn }}.crt
+#     --trustedcert /etc/icinga2/pki/trusted-master.crt
+#     --ca /etc/icinga2/pki/ca.crt
+#     creates=/etc/icinga2/pki/ca.crt
+
+- name: check if node setup needs happen
+  shell: grep {{ ansible_fqdn }} /etc/icinga2/constants.conf
+  register: node_setup
+  changed_when: false
+  ignore_errors: true
+
+- name: Continue with the additional node setup steps. Specify a local endpoint and zone name ({{ ansible_fqdn }}) and set the master host ({{ icinga2_server }}) as parent zone configuration. Specify the path to the previously stored trusted master certificate.
+  shell: >
+    icinga2 node setup --ticket {{ client_ticket.stdout }}
+    --endpoint {{ icinga2_server }},{{ icinga2_server }},{{ icinga2_server_port }}
+    --zone {{ ansible_fqdn }}
+    --cn {{ ansible_fqdn }}
+    --master_host {{ icinga2_server }}
+    --trustedcert /etc/icinga2/pki/trusted-master.crt
+    --accept-config
+    --accept-commands
+  when: node_setup.rc != 0
+
+# Sync our configuration files
+#- name: Install global (static) configs for checks
+#  copy:
+#    src="{{ item }}"
+#    dest="{{ nagios_nrpe_server_nrpe_d_dir }}/"
+#    owner=root group={{ nagios_nrpe_server_group }} mode=0640
+#  with_fileglob:
+#    - configs/global/*
+
+# Sync our Icinga 2 configuration files
+- name: Install global (static) Icinga 2 configs for checks
+  copy: >
+    src="{{ item }}"
+    dest="{{ icinga_server_conf_d_dir }}/"
+    owner=root group={{ icinga_server_group }} mode=0640
+  with_fileglob:
+    - "icinga2-configs/global/*"
+
+# Sync our plugins
+- name: Install global plugins
+  copy:
+    src="{{ item }}"
+    dest="{{ nagios_nrpe_server_plugins_dir }}/"
+    owner=root group=root mode=0755
+  with_fileglob:
+    - "plugins/global/*"
+
+# Install per-server plugins
+- name: Install per-server plugins
+  copy: >
+    src="{{ item }}"
+    dest="{{ nagios_nrpe_server_plugins_dir }}/"
+    owner=root group=root mode=0755
+  with_fileglob:
+    - "plugins/{{ ansible_fqdn }}/*"
+
+- name: restart icinga2
+  service: name=icinga2 state=restarted enabled=yes
+  #when: node_setup.rc != 0

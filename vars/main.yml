@@ -1,0 +1,5 @@
+---
+# vars file for ansible-icinga2-client
+
+icinga_server_dir: /etc/icinga2
+icinga_server_conf_d_dir: "{{ icinga_server_dir }}/conf.d/commands/"

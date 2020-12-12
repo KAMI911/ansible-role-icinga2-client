@@ -1,0 +1,10 @@
+---
+# defaults file for ansible-icinga2-client
+
+# Change server hostname and salt settings for your configuration
+icinga2_server: icinga.server.org
+icinga2_server_port: 5665
+ticket_salt: q08TgeMcBv03ViwQB04dcJqEgnT5CVZC
+
+icinga_server_user: icinga
+icinga_server_group: icinga
