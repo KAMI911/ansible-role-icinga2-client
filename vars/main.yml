@@ -1,0 +1,10 @@
+---
+# vars file for icinga2-client
+
+icinga2_server_dir: /etc/icinga2
+icinga2_server_conf_d_dir: "{{ icinga2_server_dir }}/conf.d/commands/"
+
+icinga2_packages:
+  - icinga2
+  - icinga2-bin
+  - icinga2-common

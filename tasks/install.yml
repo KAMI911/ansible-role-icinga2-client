@@ -1,0 +1,9 @@
+---
+
+- name: install icinga2-bin
+  package: name={{ icinga2_packages }} state=latest
+  notify: restart icinga2
+
+- name: 'create {{ icinga2_pki_path }} directory'
+  file: path='{{ icinga2_pki_path }}' state=directory owner={{ icinga2_server_user}} group={{ icinga2_server_group }}
+  notify: restart icinga2

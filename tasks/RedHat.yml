@@ -1,0 +1,29 @@
+---
+
+#- name: install yum-security
+#  yum: name=yum-security state=present
+
+#- name: Install Nagios NRPE Server [RedHat]
+#  yum: name=nrpe state=present
+
+- name: update yum cache
+  yum:
+    update_cache: yes
+
+- name: install Nagios Plugins [RedHat]
+  yum: name={{ icinga2_el_monitoring_packages }} state=latest
+
+- name: deploy ICINGA-release.repo
+  copy: src=ICINGA-release.repo dest=/etc/yum.repos.d/ICINGA-release.repo
+  when: icinga2_add_repository
+
+- name: import ICINGA GPG KEY
+  rpm_key: key=http://packages.icinga.org/icinga.key state=present
+  when: icinga2_add_repository
+
+- name: update yum cache
+  yum:
+    update_cache: yes
+
+- name: install sysstat [RedHat]
+  yum: name=sysstat state=present

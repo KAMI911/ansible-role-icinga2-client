@@ -1,0 +1,29 @@
+---
+
+# tasks file for ansible-icinga2-client
+
+# Include variables at the start so they're in scope
+- name: include OS-specific variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+
+# Include RedHat specific variables due to x64/x86 differences
+- name: include RedHat x86 variables
+  include_vars: "{{ ansible_os_family }}.yml"
+  when: (ansible_os_family == 'RedHat' and ansible_architecture == 'i386')
+
+- name: include RedHat x64 variables
+  include_vars: "{{ ansible_os_family }}-x64.yml"
+  when: (ansible_os_family == 'RedHat' and ansible_architecture == 'x86_64')
+
+- include_tasks: RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- include_tasks: Debian.yml
+  when: ansible_os_family == 'Debian'
+
+- include_tasks: install.yml
+
+- include_tasks: configure.yml
+
+- name: start and enable icinga2 service
+  service: name=icinga2 state=started enabled=yes

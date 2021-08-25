@@ -1,0 +1,39 @@
+
+command[check_apt]={{ nagios_nrpe_server_plugins_dir }}/check_apt
+command[check_zypper]={{ nagios_nrpe_server_plugins_dir }}/check_zypper
+command[check_yum]={{ nagios_nrpe_server_plugins_dir }}/check_yum
+
+command[check_ntp_system_time]={{ nagios_nrpe_server_plugins_dir }}/check_ntp_time -H 0.europe.pool.ntp.org -w 5 -c 10
+
+command[check_uptime]={{ nagios_nrpe_server_plugins_dir }}/check_uptime
+
+command[check_cpu]={{ nagios_nrpe_server_plugins_dir }}/check_cpu.sh
+
+command[check_users_10]={{ nagios_nrpe_server_plugins_dir }}/check_users -w 5 -c 10
+command[check_users_20]={{ nagios_nrpe_server_plugins_dir }}/check_users -w 15 -c 20
+
+command[check_load_4]={{ nagios_nrpe_server_plugins_dir }}/check_load -w 13,12,4 -c 17,16,8
+command[check_load_8]={{ nagios_nrpe_server_plugins_dir }}/check_load -w 25,24,8 -c 33,32,16
+command[check_load_16]={{ nagios_nrpe_server_plugins_dir }}/check_load -w 49,48,16 -c 65,64,32
+
+command[check_disk_1]={{ nagios_nrpe_server_plugins_dir }}/check_disk -w 2% -c 1% -X none -X shmfs -X unknown -X iso9660 -X configfs -X cgroup -X tmpfs -X selinuxfs -X sysfs -X proc -X mqueue -X binfmt_misc -X devtmpfs
+command[check_disk_4]={{ nagios_nrpe_server_plugins_dir }}/check_disk -w 8% -c 4% -X none -X shmfs -X unknown -X iso9660 -X configfs -X cgroup -X tmpfs -X selinuxfs -X sysfs -X proc -X mqueue -X binfmt_misc -X devtmpfs
+command[check_disk_10]={{ nagios_nrpe_server_plugins_dir }}/check_disk -w 20% -c 10% -X none -X shmfs -X unknown -X iso9660 -X configfs -X cgroup -X tmpfs -X selinuxfs -X sysfs -X proc -X mqueue -X binfmt_misc -X devtmpfs
+
+command[check_swap_10]={{ nagios_nrpe_server_plugins_dir }}/check_swap -w 20% -c 10%
+command[check_swap_20]={{ nagios_nrpe_server_plugins_dir }}/check_swap -w 30% -c 20%
+
+command[check_zombie_procs]={{ nagios_nrpe_server_plugins_dir }}/check_procs -w 5 -c 10 -s Z
+
+command[check_total_procs_200]={{ nagios_nrpe_server_plugins_dir }}/check_procs -w 150 -c 200 -s RSZDT
+command[check_total_procs_300]={{ nagios_nrpe_server_plugins_dir }}/check_procs -w 250 -c 300 -s RSZDT
+command[check_total_procs_400]={{ nagios_nrpe_server_plugins_dir }}/check_procs -w 350 -c 400 -s RSZDT
+command[check_total_procs_500]={{ nagios_nrpe_server_plugins_dir }}/check_procs -w 450 -c 500 -s RSZDT
+
+command[check_mem_5]={{ nagios_nrpe_server_plugins_dir }}/check_mem.pl -C -f -w 10 -c 5
+command[check_mem_10]={{ nagios_nrpe_server_plugins_dir }}/check_mem.pl -C -f -w 15 -c 10
+
+command[check_tomcat_1]={{ nagios_nrpe_server_plugins_dir }}/check_procs -c 1 -u 'tomcat' -C 'java'
+
+command[check_mailq_5]={{ nagios_nrpe_server_plugins_dir }}/check_mailq -w 1 -c 5
+command[check_mailq_50]={{ nagios_nrpe_server_plugins_dir }}/check_mailq -w 20 -c 50

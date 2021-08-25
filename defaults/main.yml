@@ -1,0 +1,38 @@
+---
+# defaults file for ansible-icinga2-client
+
+# Change server hostname and salt settings for your configuration
+icinga2_server: icinga.server.org
+icinga2_server_port: 5665
+icinga2_ticket_salt: q08TgeMcBv03ViwQB04dcJqEgnT5CVZC
+
+icinga2_server_user: icinga
+icinga2_server_group: icinga
+
+icinga2_add_repository: true
+
+icinga2_disable_confd: false
+icinga2_do_replace_confd: false
+icinga2_replace_confd: "conf.d/commands"
+
+icinga2_pki_path: '/var/lib/icinga2/certs'  # Old path was in Icinga 2.8 or older: '/etc/icinga2/pki'
+
+icinga2_debian_monitoring_packages:
+  - monitoring-plugins
+  - monitoring-plugins-standard
+  - monitoring-plugins-common
+
+icinga2_el_monitoring_packages:
+  - nagios-plugins-check-updates
+  - nagios-plugins-disk
+  - nagios-plugins-file_age
+  - nagios-plugins-load
+  - nagios-plugins-log
+  - nagios-plugins-ntp
+  - nagios-plugins-procs
+  - nagios-plugins-swap
+  - nagios-plugins-users
+  - nagios-plugins-uptime
+
+icinga2_apt_key: "https://packages.icinga.com/icinga.key"
+icinga2_apt_url: "deb http://packages.icinga.com/{{ ansible_distribution|lower }} icinga-{{ ansible_distribution_release }} main"

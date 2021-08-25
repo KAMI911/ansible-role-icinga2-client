@@ -1,0 +1,117 @@
+---
+
+- name: generate a new local self-signed certificate.
+  shell: >
+    icinga2 pki new-cert --cn {{ ansible_fqdn }}
+    --key '{{ icinga2_pki_path }}/{{ ansible_fqdn }}.key'
+    --cert '{{ icinga2_pki_path }}/{{ ansible_fqdn }}.crt'
+  args:
+    creates: '{{ icinga2_pki_path }}/{{ ansible_fqdn }}.key'
+  notify: restart icinga2
+
+- name: "Request the master certificate from the master host {{ icinga2_server }} and store it as trusted-master.crt. Review it and continue."
+  shell: >
+    icinga2 pki save-cert --key '{{ icinga2_pki_path }}/{{ ansible_fqdn }}.key'
+    --cert '{{ icinga2_pki_path }}/{{ ansible_fqdn }}.crt'
+    --trustedcert '{{ icinga2_pki_path }}/trusted-master.crt'
+    --host {{ icinga2_server }}
+  args:
+    creates: '{{ icinga2_pki_path }}/trusted-master.crt'
+  notify: restart icinga2
+
+- name: generate ticket
+  shell: >
+    icinga2 pki ticket --cn {{ ansible_fqdn }} --salt {{ icinga2_ticket_salt }}
+  register: client_ticket
+  changed_when: false
+
+- name: "Send the self-signed certificate to the master host using the ticket number and receive a CA signed certificate and the master's ca.crt certificate. Specify the path to the previously stored trusted master certificate."
+  shell: >
+    icinga2 pki request --host {{ icinga2_server }} --port {{ icinga2_server_port }}
+    --ticket {{ client_ticket.stdout }}
+    --key '{{ icinga2_pki_path }}/{{ ansible_fqdn }}.key'
+    --cert '{{ icinga2_pki_path }}/{{ ansible_fqdn }}.crt'
+    --trustedcert '{{ icinga2_pki_path }}/trusted-master.crt'
+    --ca '{{ icinga2_pki_path }}/ca.crt'
+  args:
+    creates: '{{ icinga2_pki_path }}/ca.crt'
+  when: client_ticket is defined
+  notify: restart icinga2
+
+- name: check if node setup needs happen
+  shell: grep {{ ansible_fqdn }} /etc/icinga2/constants.conf
+  register: node_setup
+  changed_when: false
+  ignore_errors: true
+
+- name: "Continue with the additional node setup steps. Specify a local endpoint with zone name and set the master host ({{ icinga2_server }}) as parent zone configuration. Specify the path to the previously stored trusted master certificate."
+  shell: >
+    icinga2 node setup --ticket {{ client_ticket.stdout }}
+    --endpoint {{ icinga2_server }},{{ icinga2_server }},{{ icinga2_server_port }}
+    --zone {{ ansible_fqdn }}
+    --cn {{ ansible_fqdn }}
+    --parent_host {{ icinga2_server }}
+    --trustedcert '{{ icinga2_pki_path }}/trusted-master.crt'
+    --accept-config
+    --accept-commands
+    {{ '--disable--confd' if icinga2_disable_confd else '' }}
+  when:
+   - node_setup.rc != 0
+   - client_ticket is defined
+  notify: restart icinga2
+
+- name: replace confd starting path and/or disable the inclusion of files
+  lineinfile:
+    dest: /etc/icinga2/icinga2.conf
+    line: '{{ "// " if icinga2_disable_confd else "" }}include_recursive "{{ icinga2_replace_confd }}"'
+    regexp: 'include_recursive\s".*"'
+  when: icinga2_do_replace_confd
+  notify: restart icinga2
+
+# Sync our configuration files
+#- name: Install global (static) configs for checks
+#  copy:
+#    src="{{ item }}"
+#    dest="{{ nagios_nrpe_server_nrpe_d_dir }}/"
+#    owner=root group={{ nagios_nrpe_server_group }} mode=0640
+#  with_fileglob:
+#    - configs/global/*
+
+# Sync our Icinga 2 configuration files
+
+- name: install global (static) Icinga 2 configs for checks
+  copy: >
+    src="{{ item }}"
+    dest="{{ icinga2_server_conf_d_dir }}/"
+    owner=root group={{ icinga2_server_group }} mode=0640
+  with_fileglob:
+    - "icinga2-configs/global/*"
+  notify: restart icinga2
+
+# Sync our plugins
+- name: install global plugins
+  copy:
+    src="{{ item }}"
+    dest="{{ nagios_nrpe_server_plugins_dir }}/"
+    owner=root group=root mode=0755
+  with_fileglob:
+    - "plugins/global/*"
+
+# Install per-server plugins
+- name: install per-server plugins
+  copy: >
+    src="{{ item }}"
+    dest="{{ nagios_nrpe_server_plugins_dir }}/"
+    owner=root group=root mode=0755
+  with_fileglob:
+    - "plugins/{{ ansible_fqdn }}/*"
+
+#- file: path="{{ nagios_nrpe_server_nrpe_d_dir }}" state=directory owner=root group={{ nagios_nrpe_server_group }} mode=0750
+
+# Create basic_linux.cfg
+#- name: Create basic_linux.cfg from template
+#  template: >
+#    src="basic_linux.cfg.j2"
+#    dest="{{ nagios_nrpe_server_nrpe_d_dir }}/basic_linux.cfg"
+#    owner=root group={{ nagios_nrpe_server_group }} mode=0640
+#  #notify: restart nagios-nrpe-server

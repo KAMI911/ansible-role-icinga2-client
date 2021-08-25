@@ -1,0 +1,8 @@
+---
+# handlers file for icinga2-client
+
+- name: restart nagios-nrpe-server
+  service: name='{{ nagios_nrpe_server_service }}' state=restarted
+
+- name: restart icinga2
+  service: name=icinga2 state=restarted enabled=yes

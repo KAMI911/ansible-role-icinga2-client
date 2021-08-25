@@ -1,0 +1,36 @@
+---
+
+- name: update apt cache
+  apt:
+    update_cache: yes
+
+- name: install Nagios Plugins [Debian]
+  apt: name={{ icinga2_debian_monitoring_packages }} state=latest
+
+- name: install apt-transport-https [Debian]
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: present
+  when: icinga2_add_repository
+
+- name: add Icinga 2 repository key [Debian]
+  become: yes
+  apt_key:
+    url: '{{ icinga2_apt_key }}'
+    state: present
+  when: icinga2_add_repository
+
+- name: add Icinga 2 repository [Debian]
+  become: yes
+  apt_repository:
+    repo: '{{ icinga2_apt_url }}'
+    state: present
+  when: icinga2_add_repository
+
+- name: update apt cache
+  apt:
+    update_cache: yes
+
+- name: install sysstat [Debian]
+  apt: name=sysstat state=present
