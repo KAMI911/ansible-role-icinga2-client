@@ -31,6 +31,8 @@ None.
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
 
+### Port, connection, and firewall related options
+
     icinga2_server: icinga.server.org
 
 Specify of your Icinga 2 master installation's FQDN address.
@@ -38,6 +40,18 @@ Specify of your Icinga 2 master installation's FQDN address.
     icinga2_server_port: 5665
 
 Icinga 2 port to use. (You don't want to change it in default installations.)
+
+    icinga2_manage_firewalld: false
+
+Role manages the firewalld settings of required ports.
+
+    icinga2_enable_firewalld: false
+
+Force install and enable firewalld service.
+
+    icinga2_manage_firewalld_use_zone: false
+
+Icinga2 firewalld uses zones (default) or use source addresses.
 
     icinga2_ticket_salt: q08TgeMcBv03ViwQB04dcJqEgnT5CVZC
 

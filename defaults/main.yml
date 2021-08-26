@@ -6,6 +6,10 @@ icinga2_server: icinga.server.org
 icinga2_server_port: 5665
 icinga2_ticket_salt: q08TgeMcBv03ViwQB04dcJqEgnT5CVZC
 
+icinga2_manage_firewalld: false
+icinga2_enable_firewalld: false
+icinga2_manage_firewalld_use_zone: false
+
 icinga2_server_user: icinga
 icinga2_server_group: icinga
 

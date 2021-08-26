@@ -1,0 +1,42 @@
+---
+#
+# Configure icinga2 firewalld
+#
+
+- name: install firewalld package
+  package:
+    name: firewalld
+    state: present
+  when: icinga2_enable_firewalld
+
+- name: ensure firewalld is running and enabled on boot
+  service:
+    name: firewalld
+    state: started
+    enabled: true
+  when: icinga2_enable_firewalld
+
+- name: check firewalld status
+  shell: 'echo $(systemctl is-active firewalld)'
+  register: service_firewalld
+
+- name: 'configure firewalld for Incinga 2 server ({{ icinga2_server }}) reach port: {{ icinga2_server_port }}'
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address="{{ icinga2_server }}" port port={{ icinga2_server_port }} protocol=tcp accept'
+    permanent: true
+    immediate: true
+    state: enabled
+  when:
+   - not icinga2_manage_firewalld_use_zone
+   - service_firewalld.stdout == 'active'
+
+- name: 'configure firewalld for Incinga 2 server ({{ icinga2_server }}) reach port: {{ icinga2_server_port }}'
+  firewalld:
+    port: '{{ icinga2_server_port }}/tcp'
+    permanent: true
+    immediate: true
+    state: enabled
+    zone: '{{ icinga2_server_zone }}'
+  when:
+   - icinga2_manage_firewalld_use_zone
+   - service_firewalld.stdout == 'active'
