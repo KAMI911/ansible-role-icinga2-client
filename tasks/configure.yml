@@ -84,6 +84,7 @@
     src="{{ item }}"
     dest="{{ icinga2_server_conf_d_dir }}/"
     owner=root group={{ icinga2_server_group }} mode=0640
+    force=yes
   with_fileglob:
     - "icinga2-configs/global/*"
   tags:
@@ -96,6 +97,7 @@
     src="{{ item }}"
     dest="{{ nagios_nrpe_server_plugins_dir }}/"
     owner=root group=root mode=0755
+    force=yes
   with_fileglob:
     - "plugins/global/*"
   tags:
@@ -107,6 +109,7 @@
     src="{{ item }}"
     dest="{{ nagios_nrpe_server_plugins_dir }}/"
     owner=root group=root mode=0755
+    force=yes
   with_fileglob:
     - "plugins/{{ ansible_fqdn }}/*"
   tags:
@@ -120,4 +123,5 @@
 #    src="basic_linux.cfg.j2"
 #    dest="{{ nagios_nrpe_server_nrpe_d_dir }}/basic_linux.cfg"
 #    owner=root group={{ nagios_nrpe_server_group }} mode=0640
+#    force=yes
 #  #notify: restart nagios-nrpe-server
