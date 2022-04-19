@@ -24,6 +24,10 @@
 - include_tasks: install.yml
 
 - include_tasks: configure.yml
+  tags:
+   - icinga2_client_install_nrpe_configs
+   - icinga2_client_install_global_plugins
+   - icinga2_client_install_per_server_plugins
 
 - name: start and enable icinga2 service
   service: name=icinga2 state=started enabled=yes
