@@ -86,6 +86,8 @@
     owner=root group={{ icinga2_server_group }} mode=0640
   with_fileglob:
     - "icinga2-configs/global/*"
+  tags:
+   - icinga2_client_install_nrpe_configs
   notify: restart icinga2
 
 # Sync our plugins
@@ -96,6 +98,8 @@
     owner=root group=root mode=0755
   with_fileglob:
     - "plugins/global/*"
+  tags:
+   - icinga2_client_install_global_plugins
 
 # Install per-server plugins
 - name: install per-server plugins
@@ -105,6 +109,8 @@
     owner=root group=root mode=0755
   with_fileglob:
     - "plugins/{{ ansible_fqdn }}/*"
+  tags:
+   - icinga2_client_install_per_server_plugins
 
 #- file: path="{{ nagios_nrpe_server_nrpe_d_dir }}" state=directory owner=root group={{ nagios_nrpe_server_group }} mode=0750
 
