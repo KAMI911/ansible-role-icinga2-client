@@ -5,15 +5,27 @@
 # Include variables at the start so they're in scope
 - name: include OS-specific variables.
   include_vars: "{{ ansible_os_family }}.yml"
+  tags:
+   - icinga2_client_install_nrpe_configs
+   - icinga2_client_install_global_plugins
+   - icinga2_client_install_per_server_plugins
 
 # Include RedHat specific variables due to x64/x86 differences
 - name: include RedHat x86 variables
   include_vars: "{{ ansible_os_family }}.yml"
   when: (ansible_os_family == 'RedHat' and ansible_architecture == 'i386')
+  tags:
+   - icinga2_client_install_nrpe_configs
+   - icinga2_client_install_global_plugins
+   - icinga2_client_install_per_server_plugins
 
 - name: include RedHat x64 variables
   include_vars: "{{ ansible_os_family }}-x64.yml"
   when: (ansible_os_family == 'RedHat' and ansible_architecture == 'x86_64')
+  tags:
+   - icinga2_client_install_nrpe_configs
+   - icinga2_client_install_global_plugins
+   - icinga2_client_install_per_server_plugins
 
 - include_tasks: RedHat.yml
   when: ansible_os_family == 'RedHat'
