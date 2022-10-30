@@ -9,6 +9,7 @@
    - icinga2_client_install_nrpe_configs
    - icinga2_client_install_global_plugins
    - icinga2_client_install_per_server_plugins
+   - always
 
 # Include RedHat specific variables due to x64/x86 differences
 - name: include RedHat x86 variables
@@ -18,6 +19,7 @@
    - icinga2_client_install_nrpe_configs
    - icinga2_client_install_global_plugins
    - icinga2_client_install_per_server_plugins
+   - always
 
 - name: include RedHat x64 variables
   include_vars: "{{ ansible_os_family }}-x64.yml"
@@ -26,6 +28,7 @@
    - icinga2_client_install_nrpe_configs
    - icinga2_client_install_global_plugins
    - icinga2_client_install_per_server_plugins
+   - always
 
 - include_tasks: RedHat.yml
   when: ansible_os_family == 'RedHat'
